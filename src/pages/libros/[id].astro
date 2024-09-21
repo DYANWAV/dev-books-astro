@@ -1,0 +1,62 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { SHOW_BUY_BUTTON } from 'astro:env/server'
+import  { getCollection, render } from 'astro:content'
+import BuyButton from "../../components/BuyButton.astro";
+import BookScore from "../../components/BookScore.astro";
+
+export async function getStaticPaths() {
+  const books = await getCollection('books')
+
+  return books.map(book => {
+    const { data, slug } = book
+    return {
+      params: { id: slug },
+      props: { book }
+    }
+  })
+}
+
+const { book } = Astro.props
+const { slug, data: {author, buy, title, img, description, readtime}} = book
+
+const { Content } = await render(book)
+export const prerender = true
+---
+
+<Layout title={`${title} | Libros para programadores`}>
+  <div class="flex gap-12 h-screen py-[4rem] max-w-screen-xl mx-auto justify-center align-top">
+    <aside class="h-max">
+      <a href="/" class="hover:underline text-white/80 hover:text-white block mb-4">Volver atrás</a>
+      <img transition:name={`img-${slug}`} src={`/${img}`} alt={title} class="max-w-80 rounded-md mb-4">
+      <BookScore server:defer>
+        <span slot="fallback" class="text-sm text-white">Loading score...</span>
+      </BookScore>
+      { SHOW_BUY_BUTTON && <BuyButton server:defer buy={buy}/>}
+    </aside>
+    <main>
+      <h1 transition:name={`title-${slug}`}>{title}</h1>
+
+      <div transition:name={`text-${slug}`} class="prose prose-invert">
+        <Content />
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<style>
+	main {
+		width: 100%;
+    max-width: 800px;
+		color: white;
+		font-size: 20px;
+		line-height: 1.6;
+	}
+	h1 {
+		font-size: 2rem;
+		font-weight: 700;
+		line-height: 1;
+		margin-bottom: 1em;
+	}
+</style>
+
